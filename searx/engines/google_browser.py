@@ -77,8 +77,6 @@ def request(query: str, params: "OnlineParams") -> None:
                 "q": query,
                 "hl": "en",
                 "start": start,
-                "filter": "0",
-                "num": "10",
             }
         )
     )
@@ -93,9 +91,10 @@ def request(query: str, params: "OnlineParams") -> None:
     params["method"] = "POST"
     params["json"] = {
         "url": google_url,
-        "wait_after_load": 3,
-        "timeout": 20000,
-        "wait_for_selector": "#search",
+        "wait_after_load": 2,
+        "timeout": 30000,
+        "wait_for_selector": "a h3",
+        "wait_until": "domcontentloaded",
     }
     # Remove any Google-specific headers/cookies that would confuse the proxy
     params["headers"] = {"Content-Type": "application/json"}
