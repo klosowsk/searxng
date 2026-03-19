@@ -57,6 +57,7 @@ jobs:
           docker buildx build \
             -f container/builder.dockerfile \
             -t localhost/searxng/searxng:builder \
+            --no-cache \
             --load \
             .
 
