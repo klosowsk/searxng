@@ -70,11 +70,11 @@ def request(query, params):
     # POST to Camoufox service
     params["url"] = f"{camoufox_url}/scrape"
     params["method"] = "POST"
-    params["data"] = json.dumps({
+    params["content"] = json.dumps({
         "url": google_news_url,
         "wait_after_load": 3,
         "timeout": 20000,
-    })
+    }).encode()
     params["headers"]["Content-Type"] = "application/json"
     params["cookies"] = {}
     return params

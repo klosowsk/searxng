@@ -91,9 +91,9 @@ def request(query: str, params: "OnlineParams") -> None:
     # Instead of fetching Google directly, POST to our Camoufox service
     params["url"] = f"{camoufox_url}/scrape"
     params["method"] = "POST"
-    params["data"] = (
+    params["content"] = (
         '{"url": "' + google_url + '", "wait_after_load": 2, "timeout": 15000}'
-    )
+    ).encode()
     params["headers"]["Content-Type"] = "application/json"
     # Remove any Google-specific headers/cookies that would confuse the proxy
     params["cookies"] = {}
