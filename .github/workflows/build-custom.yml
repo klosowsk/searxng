@@ -60,6 +60,18 @@ jobs:
             --load \
             .
 
+      - name: Generate version_frozen.py
+        run: |
+          GIT_TAG=$(git describe --tags --always 2>/dev/null || echo "custom")
+          cat > searx/version_frozen.py << EOF
+          VERSION_STRING = "${GIT_TAG}+impersonate"
+          VERSION_TAG = "${GIT_TAG}"
+          DOCKER_TAG = "latest"
+          GIT_URL = "https://github.com/${{ github.repository }}"
+          GIT_BRANCH = "master"
+          EOF
+          sed -i 's/^          //' searx/version_frozen.py
+
       - name: Build dist image
         run: |
           docker buildx build \
