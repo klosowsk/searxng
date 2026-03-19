@@ -96,7 +96,7 @@ def response(resp):
         logger.warning("Empty HTML from Camoufox")
         return results
 
-    if "sorry" in data.get("url", "").lower():
+    if "sorry" in data.get("url", "").lower() or "consent.google" in data.get("url", "").lower():
         from searx.exceptions import SearxEngineCaptchaException
         raise SearxEngineCaptchaException()
 

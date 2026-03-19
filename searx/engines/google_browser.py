@@ -120,7 +120,7 @@ def response(resp: "SXNG_Response"):
         return results
 
     # Check for Google sorry/CAPTCHA page
-    if "sorry" in data.get("url", "").lower() or "captcha" in page_html.lower():
+    if "sorry" in data.get("url", "").lower() or "consent.google" in data.get("url", "").lower():
         from searx.exceptions import SearxEngineCaptchaException
         raise SearxEngineCaptchaException()
 
