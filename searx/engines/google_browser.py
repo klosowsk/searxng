@@ -124,58 +124,55 @@ def response(resp: "SXNG_Response"):
         from searx.exceptions import SearxEngineCaptchaException
         raise SearxEngineCaptchaException()
 
-    # Parse image map from JS
-    data_image_map = {}
-    for img_id, image_url in RE_DATA_IMAGE.findall(page_html):
-        data_image_map[img_id] = image_url.encode('utf-8').decode("unicode-escape")
-
     # Parse the HTML DOM
     dom = html.fromstring(page_html)
 
-    # Parse results using Google's result structure
-    for result in eval_xpath_list(dom, './/div[contains(@class, "MjjYud")]'):
+    # Google layouts are unstable; the most robust anchor is: <a><h3>Title</h3></a>
+    seen_urls = set()
+    for h3 in eval_xpath_list(dom, '//a[h3]/h3'):
         try:
-            title_tag = eval_xpath_getindex(result, './/div[contains(@role, "link")]', 0, default=None)
-            if title_tag is None:
+            title = extract_text(h3)
+            if not title:
                 continue
 
-            title = extract_text(title_tag)
-
-            # Get URL
-            url_tag = eval_xpath_getindex(result, './/a[@jsname]/@href', 0, default=None)
-            if url_tag is None:
-                url_tag = eval_xpath_getindex(result, './/a/@href', 0, default=None)
-            if url_tag is None or not url_tag.startswith("http"):
+            link_node = h3.getparent()
+            if link_node is None:
                 continue
 
-            url = url_tag
+            url = link_node.get('href')
+            if not url or not url.startswith('http'):
+                continue
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
 
-            # Get snippet/content
-            content_tag = eval_xpath_getindex(
-                result,
-                './/div[contains(@class, "VwiC3b")]',
-                0,
-                default=None,
-            )
-            content = extract_text(content_tag) if content_tag is not None else ""
-
-            # Get thumbnail if available
-            thumbnail = None
-            img_tag = eval_xpath_getindex(result, './/img/@id', 0, default=None)
-            if img_tag and img_tag in data_image_map:
-                thumbnail = data_image_map[img_tag]
+            # Try to find a nearby snippet in the same result container.
+            content = ''
+            container = link_node
+            for _ in range(4):
+                container = container.getparent()
+                if container is None:
+                    break
+                snippet = eval_xpath_getindex(
+                    container,
+                    './/div[contains(@class, "VwiC3b") or contains(@class, "IsZvec") or contains(@class, "s3v9rd")]',
+                    0,
+                    default=None,
+                )
+                if snippet is not None:
+                    content = extract_text(snippet)
+                    if content:
+                        break
 
             results.append(
                 {
                     "url": url,
                     "title": title,
                     "content": content,
-                    "thumbnail": thumbnail,
                 }
             )
-
         except Exception as e:
-            logger.debug("Error parsing result: %s", e)
+            logger.debug("Error parsing browser result: %s", e)
             continue
 
     # Parse suggestions
